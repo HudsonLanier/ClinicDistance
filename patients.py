@@ -37,7 +37,7 @@ def add_geolocation_patients(a_list_of_lists):
             geolocation = ox.geocoder.geocode(address_string)
             entity.append(geolocation)
         except Exception:
-            entity.append('failed to get coordinates')
+            entity.append('no coordinates yet')
 
 def add_geolocation_clinics(a_list_of_lists):
     for entity in a_list_of_lists:
@@ -52,7 +52,7 @@ def add_geolocation_clinics(a_list_of_lists):
 #make a function that gets rid of unit, apartment, suite numbers, and other types of data that are confusing the
 #geocoder. If you find more words and phrases that cause a failure, simply add them to the problem_words list
 def clean_up_addresses(a_list_of_lists):
-    problem_words = ['UNIT', 'SUITE', 'ROOM', 'FLOOR', 'APT', 'APARTMENT']
+    problem_words = ['UNIT', 'SUITE', 'ROOM', 'FLOOR', 'APT', 'APARTMENT','ETAGE' 'BUREAU']
     for entity in a_list_of_lists:
         address_string = entity[1]
         if any(x in address_string for x in problem_words):
