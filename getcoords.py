@@ -60,7 +60,7 @@ def add_geolocation(a_list_of_lists):
 #make a function that gets rid of unit, apartment, suite numbers, and other types of data that are confusing the
 #geocoder. If you find more words and phrases that cause a failure, simply add them to the problem_words list
 def clean_up_addresses(a_list_of_lists):
-    problem_words = ['UNIT', 'SUITE', 'ROOM', 'FLOOR', 'APT', 'APARTMENT']
+    problem_words = ['UNIT', 'SUITE', 'ROOM', 'FLOOR', 'APT', 'APARTMENT', 'BUREAU', 'ETAGE']
     for entity in a_list_of_lists:
         address_string = entity[2].upper()
         if any(x in address_string for x in problem_words):
@@ -111,11 +111,13 @@ def guess_location(a_list_of_lists):
 
 #note clinic 6 is showing up in the dominican republic
 def get_clean_addresses(a_list):
-    for item in a_list:
-        item.append('failed to get coordinates')
+    add_geolocation(a_list)
     clean_up_addresses(a_list)
     try_geolocation_again(a_list)
     guess_location(a_list)
     return a_list
+
+geocoord_patient_list = get_clean_addresses(list_of_patients)
+geocoord_clinic_list = get_clean_addresses(list_of_clinics)
 
 

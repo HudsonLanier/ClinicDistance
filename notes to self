@@ -1,1 +1,12 @@
 https://www.thinkdatascience.com/post/2020-03-03-osrm/osrm/ is a tutorial aboout how to use orsm in python
+
+eliminated services- osrm too complicated to set up,
+    geopy doesn't find travel times
+    graphhopper only 500/day for free
+    google is too expensive at $10/1000 requests with none free
+
+
+possible services- mapquest has 15,000free per month
+    openrouteservice.org has 2000/day for free at 40 directions per minute
+    bing 125,000 free per year
+    tomtom 2500 Free per day
