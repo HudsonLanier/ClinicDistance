@@ -1,0 +1,15 @@
+Python
+csv
+osmnx
+haversine
+folium
+polyline
+pandas
+geopandas
+wheel
+GDAL
+
+
+
+Linux
+libdgal-dev
