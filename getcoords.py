@@ -8,12 +8,12 @@ list_of_patients = []
 list_of_clinics = []
 
 #open the patient csv and store each patient as a list within the list_of_patients
-with open('/home/hudsonlanier/Desktop/testpatients.csv') as patient_data:
+with open('/home/hudsonlanier/Desktop/patients.csv') as patient_data:
     for line in csv.reader(patient_data):
         list_of_patients.append(line)
 
 #open the clinic csv and store each clinic as a list within the list_of_clinics
-with open('/home/hudsonlanier/Desktop/testclinics.csv') as clinic_data:
+with open('/home/hudsonlanier/Desktop/clinics.csv') as clinic_data:
     for line in csv.reader(clinic_data):
         list_of_clinics.append(line)
 
@@ -114,14 +114,16 @@ def clean_up_addresses(a_list_of_lists):
                     problem_word_index = address_list.index(problem_word)
                     new_address_list = address_list[:problem_word_index]
                     new_address_string = ' '.join(new_address_list)
-                    entity['address'] = new_address_string
-            entity['geo_cols'] = str(entity['address']+ ' ' + entity['city'] + ' ' + 'Canada')
+                    entity['cleaned_up_address'] = new_address_string
+            entity['geo_cols'] = str(entity['cleaned_up_address']+ ' ' + entity['city'] + ' ' + 'Canada')
 
         else:
             pass
 
     return a_list_of_lists
 #
+
+
 def try_geolocation_again(a_list_of_lists):
     for entity in a_list_of_lists:
         if entity['geo_code'] == 'failed to get coordinates':
@@ -139,18 +141,37 @@ def try_geolocation_again(a_list_of_lists):
 # #I picked one in Toronto, because that is Canada's most populous city
 # #this function is only to be used for testing or in the event  that everything else fails
 #
-#
+
+
+import geocoder
+# bing api sample address line
+#http://dev.virtualearth.net/REST/v1/Locations/CA/{adminDistrict}/{postalCode}/{locality}/{addressLine}?includeNeighborhood={includeNeighborhood}&include={includeValue}&maxResults={maxResults}&key={BingMapsAPIKey}
+BingMapsAPIKey = 'Aubd9H_Chw0zhNdONq22LAVjFVTnlwVeAXgl-QLwQKtQzXb67PF5Hh1dyRhMgdep'
+
+#g = geocoder.bing('Mountain View, CA', key=BingMapsAPIKey)
+
+def bing_get_coords(a_list):
+    for item in a_list:
+        if item['geo_code'] == 'failed to get coordinates':
+            location = str( item['city'] + item['postal_code'] + item['address'])
+            geocode = geocoder.bing( location , key =BingMapsAPIKey)
+            latitude = geocode.geojson['features'][0]['properties']['lat']
+            longitude = geocode.geojson['features'][0]['properties']['lng']
+            item['geo_code'] = (latitude, longitude)
+        else:
+            pass
+
+
+
+
+
+
 #
 #
 #
 def guess_location(a_list_of_lists):
     for entity in a_list_of_lists:
         if entity['geo_code'] == 'failed to get coordinates':
-            # entity['address'] = '393 Dundas St'
-            # entity['postal_code'] = 'M5T 1G6'
-            # entity['fsa'] = 'M5T'
-            # entity['city'] = 'Toronto'
-            # entity['province'] = 'ON'
             entity['geo_code'] = (43.65365176827117, -79.3942239178996)
             entity['warning'] = 'did not find the geocode'
         else:
@@ -170,7 +191,8 @@ def get_clean_addresses(a_list):
     add_geolocation(a_list)
     clean_up_addresses(a_list)
     try_geolocation_again(a_list)
-    guess_location(a_list)
+    bing_get_coords(a_list)
+    #guess_location(a_list)
     return a_list
 
 geocoord_patient_dict = get_clean_addresses(patient_dictionary)

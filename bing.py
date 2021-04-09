@@ -89,7 +89,6 @@ def get_candidate_time_and_dist(a_patient):
 
     for candidate in a_patient['candidates']:
         try:
-
             candidate_dict = get_data_from_bing(a_patient['geo_code'], candidate['geo_code'])
             candidate['bing_results'] = candidate_dict
         except Exception:
@@ -117,7 +116,6 @@ resultant_list = [['1', 'Clinic 1', '8308 114 ST NW', 'T6G 2V2', 'T6G', 'Edmonto
 
 def pick_closest(a_candidate_list):
     times = []
-    final_answer = ''
     for candidate in a_candidate_list:
         try:
             travel_time = candidate['bing_results']['travel_time']
@@ -128,13 +126,17 @@ def pick_closest(a_candidate_list):
 
     for selection in a_candidate_list:
         if selection ['bing_results']['travel_time'] == closest:
-            final_answer = selection
-    return final_answer
+            selection['closest'] = True
+        else:
+            selection['closest'] = False
+
 
 def give_everyone_an_answer(a_list_of_people):
     for person in a_list_of_people:
         get_candidate_time_and_dist(person)
         pick_closest(person['candidates'])
+
+give_everyone_an_answer(geocoord_patient_dict)
 
 
 
