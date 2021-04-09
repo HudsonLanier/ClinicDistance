@@ -30,6 +30,36 @@ def match_formatting(the_list_of_patients):
 
 match_formatting(list_of_patients)
 
+#puts the values into a dictionary for each clinic or patient
+correct_format = ['patient_id', 'pat_geo_cols', 'pat_geocode', 'pat_address', 'pat_postal_code',\
+                  'pat_fsa', 'nearest_clinic_id', 'clinic_geo_cols', 'clinic_geocode', 'clinic_address',\
+                  'clinic_postal_code' 'clinic_fsa', 'clinic_distance']
+
+def make_dictionaries(a_list):
+    new_list = []
+    i = 0
+    while i < len(a_list):
+        dict_name = 'patient{}'.format(i)
+        dict_name = {}
+        dict_name['id'] = a_list[i][0]
+        dict_name['geo_cols'] = str(a_list[i][2] + ' ' + a_list[i][5] + ' ' + 'Canada' )
+        dict_name['geo_code'] = ''
+        dict_name['address'] = a_list[i][2]
+        dict_name['postal_code'] = a_list[i][3]
+        dict_name['fsa'] = a_list[i][4]
+        dict_name['nearest_clinic_id'] = ''
+        dict_name['distance'] = ''
+        dict_name['city'] = a_list[i][5]
+        dict_name['provence'] = a_list[i][6]
+        new_list.append(dict_name)
+        i +=1
+    return  new_list
+
+patient_dictionary = make_dictionaries(list_of_patients)
+clinic_dictionary = make_dictionaries(list_of_clinics)
+
+
+
 
 
 #this function will not work for both patients and clinics, because both are formatted differently. CLEAN THIS UP
@@ -43,26 +73,39 @@ match_formatting(list_of_patients)
 #         except Exception:
 #             entity.append('no coordinates yet')
 
+# def add_geolocation(a_list_of_lists):
+#     for entity in a_list_of_lists:
+#         address_string = str(entity[2] + ', ' + entity[5] + ', ' + 'Canada')
+#         try:
+#             geolocation = ox.geocoder.geocode(address_string)
+#             entity.append(geolocation)
+#         except Exception:
+#             entity.append('failed to get coordinates')
+
 def add_geolocation(a_list_of_lists):
     for entity in a_list_of_lists:
-        address_string = str(entity[2] + ', ' + entity[5] + ', ' + 'Canada')
+        address_string = entity['geo_cols']
         try:
             geolocation = ox.geocoder.geocode(address_string)
-            entity.append(geolocation)
+            entity['geo_code'] = geolocation
         except Exception:
-            entity.append('failed to get coordinates')
+            entity['geo_code'] = 'failed to get coordinates'
 
 
-#function turns a list into a string. This is needed in the clean_up_addresses function
+# function turns a list into a string. This is needed in the clean_up_addresses function
+#
+#
+#
+# make a function that gets rid of unit, apartment, suite numbers, and other types of data that are confusing the
+# geocoder. If you find more words and phrases that cause a failure, simply add them to the problem_words list
 
 
 
-#make a function that gets rid of unit, apartment, suite numbers, and other types of data that are confusing the
-#geocoder. If you find more words and phrases that cause a failure, simply add them to the problem_words list
+
 def clean_up_addresses(a_list_of_lists):
     problem_words = ['UNIT', 'SUITE', 'ROOM', 'FLOOR', 'APT', 'APARTMENT', 'BUREAU', 'ETAGE']
     for entity in a_list_of_lists:
-        address_string = entity[2].upper()
+        address_string = entity['address'].upper()
         if any(x in address_string for x in problem_words):
             #break the string into a list, remove from the problem word to the end, return the corrected address
             address_list = address_string.split()
@@ -71,45 +114,58 @@ def clean_up_addresses(a_list_of_lists):
                     problem_word_index = address_list.index(problem_word)
                     new_address_list = address_list[:problem_word_index]
                     new_address_string = ' '.join(new_address_list)
-                    entity[2] = new_address_string
+                    entity['address'] = new_address_string
+            entity['geo_cols'] = str(entity['address']+ ' ' + entity['city'] + ' ' + 'Canada')
 
         else:
             pass
 
     return a_list_of_lists
-
+#
 def try_geolocation_again(a_list_of_lists):
     for entity in a_list_of_lists:
-        if entity[7] == 'failed to get coordinates':
+        if entity['geo_code'] == 'failed to get coordinates':
             try:
-                address_string = entity[2]
+                address_string = entity['geo_cols']
                 geolocation = ox.geocoder.geocode(address_string)
-                entity[7] = geolocation
+                entity['geo_code'] = geolocation
+
             except Exception:
                 pass
         else:
             pass
 
-#if there was no way to get an address, assign one.
-#I picked one in Toronto, because that is Canada's most populous city
-#this function is only to be used for testing or in the event  that everything else fails
+# #if there was no way to get an address, assign one.
+# #I picked one in Toronto, because that is Canada's most populous city
+# #this function is only to be used for testing or in the event  that everything else fails
+#
+#
+#
+#
+#
 def guess_location(a_list_of_lists):
     for entity in a_list_of_lists:
-        if entity[7] == 'failed to get coordinates':
-            entity[2] = '393 Dundas St'
-            entity[3] = 'M5T 1G6'
-            entity[4] = 'M5T'
-            entity[5] = 'Toronto'
-            entity[6] = 'ON'
-            entity[7] = (43.65365176827117, -79.3942239178996)
+        if entity['geo_code'] == 'failed to get coordinates':
+            # entity['address'] = '393 Dundas St'
+            # entity['postal_code'] = 'M5T 1G6'
+            # entity['fsa'] = 'M5T'
+            # entity['city'] = 'Toronto'
+            # entity['province'] = 'ON'
+            entity['geo_code'] = (43.65365176827117, -79.3942239178996)
+            entity['warning'] = 'did not find the geocode'
         else:
             pass
 
-
-#take the list of patients and the list of clinics and return a cleaned up data set
-#with coordinates for every location
-
-#note clinic 6 is showing up in the dominican republic
+#
+# #take the list of patients and the list of clinics and return a cleaned up data set
+# #with coordinates for every location
+#
+# #note clinic 6 is showing up in the dominican republic
+#
+#
+#
+#
+#
 def get_clean_addresses(a_list):
     add_geolocation(a_list)
     clean_up_addresses(a_list)
@@ -117,7 +173,9 @@ def get_clean_addresses(a_list):
     guess_location(a_list)
     return a_list
 
-geocoord_patient_list = get_clean_addresses(list_of_patients)
-geocoord_clinic_list = get_clean_addresses(list_of_clinics)
+geocoord_patient_dict = get_clean_addresses(patient_dictionary)
+geocoord_clinic_dict = get_clean_addresses(clinic_dictionary)
 
+#
+#
 

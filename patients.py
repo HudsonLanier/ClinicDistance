@@ -1,13 +1,8 @@
 import csv
-import networkx as nx
 import osmnx as ox
-import math
 from haversine import haversine, Unit
 
-import folium
-import requests
-import polyline
-import sys
+
 
 
 list_of_patients = []
