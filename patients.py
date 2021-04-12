@@ -9,7 +9,7 @@ list_of_patients = []
 list_of_clinics = []
 
 #open the patient csv and store each patient as a list within the list_of_patients
-with open('/home/hudsonlanier/Desktop/testpatients.csv') as patient_data:
+with open('/home/hudsonlanier/Desktop/patients.csv') as patient_data:
     for line in csv.reader(patient_data):
         list_of_patients.append(line)
 

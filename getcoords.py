@@ -1,4 +1,5 @@
 import csv
+import time
 
 import osmnx as ox
 
@@ -58,6 +59,19 @@ def make_dictionaries(a_list):
 patient_dictionary = make_dictionaries(list_of_patients)
 clinic_dictionary = make_dictionaries(list_of_clinics)
 
+def add_clinic_value(dictionary_of_clinics):
+    for item in dictionary_of_clinics:
+        item['is_clinic'] = True
+        item['is_patient'] = False
+
+def add_patient_value(dictionary_of_patients):
+    for item in dictionary_of_patients:
+        item['is_patient'] = True
+        item['is_clinic'] = False
+
+add_clinic_value(clinic_dictionary)
+add_patient_value(patient_dictionary)
+
 
 
 
@@ -82,14 +96,23 @@ clinic_dictionary = make_dictionaries(list_of_clinics)
 #         except Exception:
 #             entity.append('failed to get coordinates')
 
-def add_geolocation(a_list_of_lists):
+def add_geolocation(a_list_of_lists, retries=5):
+    # if retries < 0:
+    #     return
     for entity in a_list_of_lists:
         address_string = entity['geo_cols']
+        # if retries < 0:
+        #     return
         try:
             geolocation = ox.geocoder.geocode(address_string)
             entity['geo_code'] = geolocation
         except Exception:
             entity['geo_code'] = 'failed to get coordinates'
+            # time.sleep(.01)
+            # return add_geolocation(a_list_of_lists, retries -1)
+
+
+
 
 
 # function turns a list into a string. This is needed in the clean_up_addresses function
@@ -115,7 +138,7 @@ def clean_up_addresses(a_list_of_lists):
                     new_address_list = address_list[:problem_word_index]
                     new_address_string = ' '.join(new_address_list)
                     entity['cleaned_up_address'] = new_address_string
-            entity['geo_cols'] = str(entity['cleaned_up_address']+ ' ' + entity['city'] + ' ' + 'Canada')
+                    entity['geo_cols'] = str(entity['cleaned_up_address']+ ' ' + entity['city'] + ' ' + 'Canada')
 
         else:
             pass
@@ -150,29 +173,97 @@ BingMapsAPIKey = 'Aubd9H_Chw0zhNdONq22LAVjFVTnlwVeAXgl-QLwQKtQzXb67PF5Hh1dyRhMgd
 
 #g = geocoder.bing('Mountain View, CA', key=BingMapsAPIKey)
 
+def bing_coords_first_attempt(a_list):
+
+    try:
+        for item in a_list:
+            if item['geo_code'] == 'failed to get coordinates':
+                location = str( item['address'] + item['city'] + item[
+                    'postal_code'])
+                item['geo_cols'] = location
+                geocode = geocoder.bing( location , key =BingMapsAPIKey)
+                latitude = geocode.geojson['features'][0]['properties']['lat']
+                longitude = geocode.geojson['features'][0]['properties']['lng']
+                item['geo_code'] = (latitude, longitude)
+
+            else:
+                pass
+    except Exception:
+        pass
+
+
+def bing_coords_second_attempt(a_list):
+    try:
+        for item in a_list:
+            if item['geo_code'] == 'failed to get coordinates':
+                location = str(item['city'] + item['postal_code'])
+                item['geo_cols'] = location
+                geocode = geocoder.bing( location , key =BingMapsAPIKey)
+                latitude = geocode.geojson['features'][0]['properties']['lat']
+                longitude = geocode.geojson['features'][0]['properties']['lng']
+                item['geo_code'] = (latitude, longitude)
+
+            else:
+                pass
+    except Exception:
+        pass
+
+
+def bing_coords_third_attempt(a_list):
+    try:
+        for item in a_list:
+            if item['geo_code'] == 'failed to get coordinates':
+                location = str(item['fsa'] + item['city'] + item['province'])
+                item['geo_cols'] = location
+                geocode = geocoder.bing(location, key=BingMapsAPIKey)
+                latitude = geocode.geojson['features'][0]['properties']['lat']
+                longitude = geocode.geojson['features'][0]['properties']['lng']
+                item['geo_code'] = (latitude, longitude)
+
+            else:
+                pass
+    except Exception:
+        pass
+
+
+def bing_coords_fourth_attempt(a_list):
+    try:
+        for item in a_list:
+            if item['geo_code'] == 'failed to get coordinates':
+                location = str(item['city'] + item['province'])
+                item['geo_cols'] = location
+                geocode = geocoder.bing(location, key=BingMapsAPIKey)
+                latitude = geocode.geojson['features'][0]['properties']['lat']
+                longitude = geocode.geojson['features'][0]['properties']['lng']
+                item['geo_code'] = (latitude, longitude)
+
+            else:
+                pass
+    except Exception:
+        pass
+
+
+
+
+
+
 def bing_get_coords(a_list):
-    for item in a_list:
-        if item['geo_code'] == 'failed to get coordinates':
-            location = str( item['city'] + item['postal_code'] + item['address'])
-            geocode = geocoder.bing( location , key =BingMapsAPIKey)
-            latitude = geocode.geojson['features'][0]['properties']['lat']
-            longitude = geocode.geojson['features'][0]['properties']['lng']
-            item['geo_code'] = (latitude, longitude)
-        else:
-            pass
-
-
-
-
-
+    bing_coords_first_attempt(a_list)
+    bing_coords_second_attempt(a_list)
+    bing_coords_third_attempt(a_list)
+    bing_coords_fourth_attempt(a_list)
 
 #
 #
 #
 def guess_location(a_list_of_lists):
     for entity in a_list_of_lists:
-        if entity['geo_code'] == 'failed to get coordinates':
+        if entity['geo_code'] == 'failed to get coordinates' and entity['is_patient'] == True:
             entity['geo_code'] = (43.65365176827117, -79.3942239178996)
+            entity['warning'] = 'did not find the geocode'
+
+        elif entity['geo_code'] == 'failed to get coordinates' and entity['clinic'] == True:
+            entity['geo_code'] = (66.557807, -97.116386)
             entity['warning'] = 'did not find the geocode'
         else:
             pass
@@ -192,12 +283,10 @@ def get_clean_addresses(a_list):
     clean_up_addresses(a_list)
     try_geolocation_again(a_list)
     bing_get_coords(a_list)
-    #guess_location(a_list)
+    guess_location(a_list)
     return a_list
-
+#
 geocoord_patient_dict = get_clean_addresses(patient_dictionary)
 geocoord_clinic_dict = get_clean_addresses(clinic_dictionary)
 
-#
-#
 

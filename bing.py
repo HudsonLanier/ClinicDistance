@@ -92,7 +92,7 @@ def get_candidate_time_and_dist(a_patient):
             candidate_dict = get_data_from_bing(a_patient['geo_code'], candidate['geo_code'])
             candidate['bing_results'] = candidate_dict
         except Exception:
-            candidate.append('there was a problem')
+            candidate['bing_results'] = 'there was a problem'
 
 
 
@@ -114,27 +114,54 @@ resultant_list = [['1', 'Clinic 1', '8308 114 ST NW', 'T6G 2V2', 'T6G', 'Edmonto
 #     closest = min(times)
 #     return closest
 
-def pick_closest(a_candidate_list):
+get_candidate_time_and_dist(geocoord_patient_dict[1])
+
+def pick_closest(a_person):
     times = []
-    for candidate in a_candidate_list:
+    for candidate in a_person['candidates']:
         try:
             travel_time = candidate['bing_results']['travel_time']
             times.append(travel_time)
         except Exception:
             pass
-    closest = min(times)
 
-    for selection in a_candidate_list:
-        if selection ['bing_results']['travel_time'] == closest:
-            selection['closest'] = True
-        else:
-            selection['closest'] = False
+
+
+    if len(times) > 0:
+        closest = min(*times)
+        for selection in a_person['candidates']:
+            try:
+                if selection['bing_results']['travel_time'] == closest:
+                    selection['closest'] = True
+                else:
+                    selection['closest'] = False
+            except Exception:
+                selection['closest'] = False
+    else:
+        distances = []
+        for candidate in a_person['candidates']:
+            distance = candidate['distance']
+            distances.append(distance)
+
+
+        closest = min(*distances)
+        for selection in a_person['candidates']:
+            try:
+                if selection['distance'] == closest:
+                    selection['closest'] = True
+                else:
+                    selection['closest'] = False
+            except Exception:
+                selection['closest'] = False
+
+
+
 
 
 def give_everyone_an_answer(a_list_of_people):
     for person in a_list_of_people:
         get_candidate_time_and_dist(person)
-        pick_closest(person['candidates'])
+        pick_closest(person)
 
 give_everyone_an_answer(geocoord_patient_dict)
 

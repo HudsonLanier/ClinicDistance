@@ -23,13 +23,20 @@ correct_format = ['patient_id', 'pat_geo_cols', 'pat_geocode', 'pat_address', 'p
                   'pat_fsa', 'nearest_clinic_id', 'clinic_geo_cols', 'clinic_geocode', 'clinic_address',\
                   'clinic_postal_code' 'clinic_fsa', 'clinic_distance']
 
+def get_travel_time(a_candidate):
+    travel_time = a_candidate['bing_results']['travel_time']
+    return travel_time
 
 def get_closest_info(a_patient):
-    for candidate in a_patient['candidates']:
-        if candidate['closest'] == True:
-            return candidate
-        else:
-            pass
+    try:
+        for candidate in a_patient['candidates']:
+                if candidate['closest'] == True:
+                    return candidate
+    except Exception:
+        test_list = sorted(a_patient['candidates'], key=get_travel_time())
+        return test_list[0]
+
+
 
 
 correct_format = ['patient_id', 'pat_geo_cols', 'pat_geocode', 'pat_address', 'pat_postal_code',\
@@ -55,8 +62,10 @@ def format_data(list_of_patients):
         formatted_data_list.append(closest_clinic['address'])
         formatted_data_list.append(closest_clinic['postal_code'])
         formatted_data_list.append(closest_clinic['fsa'])
-        formatted_data_list.append(closest_clinic['bing_results']['travel_distance'])
-
+        try:
+            formatted_data_list.append(closest_clinic['bing_results']['travel_distance'])
+        except Exception:
+            formatted_data_list.append(closest_clinic['distance'])
         final_list.append(formatted_data_list)
 
     return final_list
@@ -76,6 +85,6 @@ final_list = format_data(geocoord_patient_dict)
 # need to have a value of the columns used to find the geocode of the clinic same for the patient
 #need
 
-with open('final_patients_list2.csv', 'w', newline='') as file:
+with open('final_patients_list4.csv', 'w', newline='') as file:
     writer = csv.writer(file)
     writer.writerows(final_list)

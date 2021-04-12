@@ -50,7 +50,8 @@ def get_candidates(person, list_of_clinics):
     for selection in list_of_clinics:
         for pick in person['smallest_distances']:
             if pick == selection['distance']:
-                person['candidates'].append(selection)
+                candidate_copy = selection.copy()
+                person['candidates'].append(candidate_copy)
             else:
                 pass
 
