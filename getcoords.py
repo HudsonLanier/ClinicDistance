@@ -1,27 +1,31 @@
 import csv
+import osmnx as ox
+import geocoder
 import time
 
-import osmnx as ox
-
-
+#PROGRAM USER: PUT YOUR BING API KEY HERE
+BingMapsAPIKey = 'Aubd9H_Chw0zhNdONq22LAVjFVTnlwVeAXgl-QLwQKtQzXb67PF5Hh1dyRhMgdep'
+#PROGRAM USER: PUT YOUR PATIENT CSV FILE PATH HERE
+patient_file_path = '/home/hudsonlanier/Desktop/patients.csv'
+#PROGRAM USER: PUT YOUR CLINIC FILE PATH HERE
+clinic_file_path = '/home/hudsonlanier/Desktop/clinics.csv'
 
 list_of_patients = []
 list_of_clinics = []
 
 #open the patient csv and store each patient as a list within the list_of_patients
-with open('/home/hudsonlanier/Desktop/patients.csv') as patient_data:
+with open(patient_file_path) as patient_data:
     for line in csv.reader(patient_data):
         list_of_patients.append(line)
 
 #open the clinic csv and store each clinic as a list within the list_of_clinics
-with open('/home/hudsonlanier/Desktop/clinics.csv') as clinic_data:
+with open(clinic_file_path) as clinic_data:
     for line in csv.reader(clinic_data):
         list_of_clinics.append(line)
 
 #this line deletes the first line, which has the names of the fields, and not actual data about patients
 del list_of_patients[0]
 del list_of_clinics[0]
-
 
 #the clinics file has 2 columns before the address starts, whereas the patients has only 1
 # this function adds a a column to patients, so that the data will line up for both sets
@@ -32,9 +36,6 @@ def match_formatting(the_list_of_patients):
 match_formatting(list_of_patients)
 
 #puts the values into a dictionary for each clinic or patient
-correct_format = ['patient_id', 'pat_geo_cols', 'pat_geocode', 'pat_address', 'pat_postal_code',\
-                  'pat_fsa', 'nearest_clinic_id', 'clinic_geo_cols', 'clinic_geocode', 'clinic_address',\
-                  'clinic_postal_code' 'clinic_fsa', 'clinic_distance']
 
 def make_dictionaries(a_list):
     new_list = []
@@ -73,36 +74,11 @@ add_clinic_value(clinic_dictionary)
 add_patient_value(patient_dictionary)
 
 
-
-
-
-#this function will not work for both patients and clinics, because both are formatted differently. CLEAN THIS UP
-#SO THAT IT WILL RUN AS ONE FUNCTION
-# def add_geolocation_patients(a_list_of_lists):
-#     for entity in a_list_of_lists:
-#         address_string = str(entity[1] + ', ' + entity[4] + ', ' + 'Canada')
-#         try:
-#             geolocation = ox.geocoder.geocode(address_string)
-#             entity.append(geolocation)
-#         except Exception:
-#             entity.append('no coordinates yet')
-
-# def add_geolocation(a_list_of_lists):
-#     for entity in a_list_of_lists:
-#         address_string = str(entity[2] + ', ' + entity[5] + ', ' + 'Canada')
-#         try:
-#             geolocation = ox.geocoder.geocode(address_string)
-#             entity.append(geolocation)
-#         except Exception:
-#             entity.append('failed to get coordinates')
-
 def add_geolocation(a_list_of_lists, retries=5):
     # if retries < 0:
     #     return
     for entity in a_list_of_lists:
         address_string = entity['geo_cols']
-        # if retries < 0:
-        #     return
         try:
             geolocation = ox.geocoder.geocode(address_string)
             entity['geo_code'] = geolocation
@@ -111,19 +87,8 @@ def add_geolocation(a_list_of_lists, retries=5):
             # time.sleep(.01)
             # return add_geolocation(a_list_of_lists, retries -1)
 
-
-
-
-
-# function turns a list into a string. This is needed in the clean_up_addresses function
-#
-#
-#
 # make a function that gets rid of unit, apartment, suite numbers, and other types of data that are confusing the
 # geocoder. If you find more words and phrases that cause a failure, simply add them to the problem_words list
-
-
-
 
 def clean_up_addresses(a_list_of_lists):
     problem_words = ['UNIT', 'SUITE', 'ROOM', 'FLOOR', 'APT', 'APARTMENT', 'BUREAU', 'ETAGE']
@@ -144,9 +109,9 @@ def clean_up_addresses(a_list_of_lists):
             pass
 
     return a_list_of_lists
-#
 
 
+#run the geocoder again with the cleaned up address line
 def try_geolocation_again(a_list_of_lists):
     for entity in a_list_of_lists:
         if entity['geo_code'] == 'failed to get coordinates':
@@ -160,21 +125,10 @@ def try_geolocation_again(a_list_of_lists):
         else:
             pass
 
-# #if there was no way to get an address, assign one.
-# #I picked one in Toronto, because that is Canada's most populous city
-# #this function is only to be used for testing or in the event  that everything else fails
-#
-
-
-import geocoder
-# bing api sample address line
-#http://dev.virtualearth.net/REST/v1/Locations/CA/{adminDistrict}/{postalCode}/{locality}/{addressLine}?includeNeighborhood={includeNeighborhood}&include={includeValue}&maxResults={maxResults}&key={BingMapsAPIKey}
-BingMapsAPIKey = 'Aubd9H_Chw0zhNdONq22LAVjFVTnlwVeAXgl-QLwQKtQzXb67PF5Hh1dyRhMgdep'
-
-#g = geocoder.bing('Mountain View, CA', key=BingMapsAPIKey)
-
-def bing_coords_first_attempt(a_list):
-
+#this will retry 3 times in the event that the API call is unsuccessful for any reason
+def bing_coords_first_attempt(a_list, retries=2):
+    if retries <0:
+        return
     try:
         for item in a_list:
             if item['geo_code'] == 'failed to get coordinates':
@@ -188,8 +142,10 @@ def bing_coords_first_attempt(a_list):
 
             else:
                 pass
+
     except Exception:
-        pass
+        time.sleep(.1)
+        return bing_coords_first_attempt(a_list, retries - 1)
 
 
 def bing_coords_second_attempt(a_list):
@@ -243,19 +199,18 @@ def bing_coords_fourth_attempt(a_list):
         pass
 
 
-
-
-
-
 def bing_get_coords(a_list):
     bing_coords_first_attempt(a_list)
     bing_coords_second_attempt(a_list)
     bing_coords_third_attempt(a_list)
     bing_coords_fourth_attempt(a_list)
 
-#
-#
-#
+# #if there was no way to get an address, assign one.
+# #I picked one in Toronto for patients, because that is Canada's most populous city
+#this keeps the program running in the event that there was an entry with no usable information in it.
+#for clinics with no usable information, I used a location in the middle of the ocean so as
+#not to direct patients there
+
 def guess_location(a_list_of_lists):
     for entity in a_list_of_lists:
         if entity['geo_code'] == 'failed to get coordinates' and entity['is_patient'] == True:
@@ -263,7 +218,7 @@ def guess_location(a_list_of_lists):
             entity['warning'] = 'did not find the geocode'
 
         elif entity['geo_code'] == 'failed to get coordinates' and entity['clinic'] == True:
-            entity['geo_code'] = (66.557807, -97.116386)
+            entity['geo_code'] = (18.521837397421635, 169.1714771092401)
             entity['warning'] = 'did not find the geocode'
         else:
             pass
@@ -271,13 +226,7 @@ def guess_location(a_list_of_lists):
 #
 # #take the list of patients and the list of clinics and return a cleaned up data set
 # #with coordinates for every location
-#
-# #note clinic 6 is showing up in the dominican republic
-#
-#
-#
-#
-#
+
 def get_clean_addresses(a_list):
     add_geolocation(a_list)
     clean_up_addresses(a_list)
@@ -285,7 +234,7 @@ def get_clean_addresses(a_list):
     bing_get_coords(a_list)
     guess_location(a_list)
     return a_list
-#
+
 geocoord_patient_dict = get_clean_addresses(patient_dictionary)
 geocoord_clinic_dict = get_clean_addresses(clinic_dictionary)
 

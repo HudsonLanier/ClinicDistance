@@ -1,0 +1,36 @@
+Readme for ClinicDistance3.9
+
+Python Version 3.9.2
+
+pip installs required to run:
+	osmnx
+	geocoder
+	haversine
+
+Set up a virtual environment that uses python3.9.2. Use pip to install osmnx, geocoder, and haversine.
+Notes on setting up a virtual environment: https://docs.python.org/3/tutorial/venv.html
+
+pip install osmnx
+pip install geocoder
+pip install haversine
+
+To prepare to run, open the getcoords.py file. At the top are three fields, BingMapsAPIKey, patient_file_path,
+and clinic_file_path. Put in the relevant information here.
+
+Once this is complete, execute the program by running main.py
+python main.py
+
+When this finishes running, there will be a file called 'final_patients_list_with_clinics.csv'
+
+List of Files in the project:
+    main.py
+    getcoords.py
+    winnower.py
+    bing.py
+    readme
+
+
+ Video explanation at https://vimeo.com/536373112/e163e918f6
+
+
+
