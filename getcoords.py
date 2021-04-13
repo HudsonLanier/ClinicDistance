@@ -74,9 +74,7 @@ add_clinic_value(clinic_dictionary)
 add_patient_value(patient_dictionary)
 
 
-def add_geolocation(a_list_of_lists, retries=5):
-    # if retries < 0:
-    #     return
+def add_geolocation(a_list_of_lists):
     for entity in a_list_of_lists:
         address_string = entity['geo_cols']
         try:
@@ -84,8 +82,7 @@ def add_geolocation(a_list_of_lists, retries=5):
             entity['geo_code'] = geolocation
         except Exception:
             entity['geo_code'] = 'failed to get coordinates'
-            # time.sleep(.01)
-            # return add_geolocation(a_list_of_lists, retries -1)
+
 
 # make a function that gets rid of unit, apartment, suite numbers, and other types of data that are confusing the
 # geocoder. If you find more words and phrases that cause a failure, simply add them to the problem_words list

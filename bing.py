@@ -44,7 +44,7 @@ def get_candidate_time_and_dist(a_patient, retries=3):
             return get_candidate_time_and_dist(a_patient, retries -1)
 
 
-get_candidate_time_and_dist(geocoord_patient_dict[1])
+
 
 def pick_closest(a_person):
     distances = []
