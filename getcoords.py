@@ -4,7 +4,7 @@ import geocoder
 import time
 
 #PROGRAM USER: PUT YOUR BING API KEY HERE
-BingMapsAPIKey = 'Aubd9H_Chw0zhNdONq22LAVjFVTnlwVeAXgl-QLwQKtQzXb67PF5Hh1dyRhMgdep'
+BingMapsAPIKey = ''
 #PROGRAM USER: PUT YOUR PATIENT CSV FILE PATH HERE
 patient_file_path = '/home/hudsonlanier/Desktop/patients.csv'
 #PROGRAM USER: PUT YOUR CLINIC FILE PATH HERE
