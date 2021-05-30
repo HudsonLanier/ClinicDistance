@@ -6,9 +6,9 @@ import time
 #PROGRAM USER: PUT YOUR BING API KEY HERE
 BingMapsAPIKey = ''
 #PROGRAM USER: PUT YOUR PATIENT CSV FILE PATH HERE
-patient_file_path = '/home/hudsonlanier/Desktop/patients.csv'
+patient_file_path = ''
 #PROGRAM USER: PUT YOUR CLINIC FILE PATH HERE
-clinic_file_path = '/home/hudsonlanier/Desktop/clinics.csv'
+clinic_file_path = ''
 
 list_of_patients = []
 list_of_clinics = []
